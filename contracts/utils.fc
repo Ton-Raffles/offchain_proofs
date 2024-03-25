@@ -1,0 +1,97 @@
+#include "imports/stdlib.fc";
+
+(cell) empty_cell() inline asm "<b b> PUSHREF";
+
+(cell) my_code() inline asm "MYCODE";
+
+(cell) compose_body(int op, int query_id, builder body) inline {
+    return begin_cell()
+        .store_uint(op, 32)
+        .store_uint(query_id, 64)
+        .store_builder(body)
+    .end_cell();
+}
+
+(cell) compose_forward_payload(int op, builder body) inline {
+    return begin_cell()
+        .store_uint(op, 32)
+        .store_builder(body)
+    .end_cell();
+}
+
+(cell) compose_init(cell code, cell data) inline {
+    return begin_cell()
+        .store_uint(6, 5)
+        .store_ref(code)
+        .store_ref(data)
+    .end_cell();
+}
+
+() send_msg(int bounceable?, slice recipient, int value, int mode) impure {
+    send_raw_message(begin_cell()
+        .store_uint(bounceable? ? 0x18 : 0x10, 6)
+        .store_slice(recipient)
+        .store_coins(value)
+        .store_uint(0, 107)
+    .end_cell(), mode);
+}
+
+() send_msg_with_body(int bounceable?, slice recipient, int value, cell body, int mode) impure {
+    send_raw_message(begin_cell()
+        .store_uint(bounceable? ? 0x18 : 0x10, 6)
+        .store_slice(recipient)
+        .store_coins(value)
+        .store_uint(1, 107)
+        .store_ref(body)
+    .end_cell(), mode);
+}
+
+() send_msg_with_body_and_init(int bounceable?, slice recipient, int value, cell body, cell init, int mode) impure {
+    send_raw_message(begin_cell()
+        .store_uint(bounceable? ? 0x18 : 0x10, 6)
+        .store_slice(recipient)
+        .store_coins(value)
+        .store_uint(7, 108)
+        .store_ref(init)
+        .store_ref(body)
+    .end_cell(), mode);
+}
+
+() send_jettons(slice jetton_wallet, slice recipient, int amount, int value, int mode, int query_id) impure {
+    send_msg_with_body(
+        true,
+        jetton_wallet,
+        value,
+        compose_body(op::jetton::transfer, query_id, begin_cell()
+            .store_coins(amount)
+            .store_slice(recipient)
+            .store_slice(recipient)
+            .store_uint(0, 6)
+        ),
+        mode
+    );
+}
+
+() send_jettons_with_forward_payload(slice jetton_wallet, slice recipient, int amount, int value, int mode, int query_id, cell forward_payload, int forward_amount) impure {
+    send_msg_with_body(
+        true,
+        jetton_wallet,
+        value,
+        compose_body(op::jetton::transfer, query_id, begin_cell()
+            .store_coins(amount)
+            .store_slice(recipient)
+            .store_slice(recipient)
+            .store_uint(0, 1)
+            .store_coins(forward_amount)
+            .store_maybe_ref(forward_payload)
+        ),
+        mode
+    );
+}
+
+(slice) calculate_address(cell init) inline {
+    return begin_cell()
+        .store_uint(0x400, 11)
+        .store_uint(cell_hash(init), 256)
+    .end_cell().begin_parse();
+}

@@ -1,0 +1,18 @@
+const int op::deploy = 0x5b4e69b9;
+const int op::claim = 0x456a9261;
+const int op::check_claim = 0x11e2e7d6;
+const int op::confirm_claim = 0x5170785a;
+const int op::send_service_message = 0x000a3c66;
+const int op::add_referral = 0x3f5c2970;
+
+const int op::jetton::transfer = 0x0f8a7ea5;
+
+const int error::wrong_signature = 901;
+const int error::wrong_time = 902;
+const int error::wrong_sender = 903;
+const int error::wrong_task = 904;
+const int error::already_claimed = 905;
+const int error::not_enough_value = 906;
+
+const int const::ton_for_storage = 50000000;
+const int const::ton_for_fees = 50000000;

@@ -1,0 +1,99 @@
+#include "imports/stdlib.fc";
+#include "constants.fc";
+#include "utils.fc";
+
+;; data globals
+global int data::claimed;
+global slice data::user;
+global slice data::task;
+global int data::referrals;
+
+;; context globals
+global int context::bounced?;
+global int context::op;
+global int context::query_id;
+global slice context::sender;
+
+() load_data() impure {
+    slice ds = get_data().begin_parse();
+    data::claimed = ds~load_int(1);
+    data::user = ds~load_msg_addr();
+    data::task = ds~load_msg_addr();
+    data::referrals = ds~load_uint(32);
+}
+
+() save_data() impure {
+    set_data(begin_cell()
+        .store_int(data::claimed, 1)
+        .store_slice(data::user)
+        .store_slice(data::task)
+        .store_uint(data::referrals, 32)
+    .end_cell());
+}
+
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    if (in_msg_body.slice_bits() < 96) {
+        return ();
+    }
+
+    slice cs = in_msg_full.begin_parse();
+    context::bounced? = cs~load_uint(4) & 1;
+    if (context::bounced?) {
+        in_msg_body~skip_bits(32);
+    }
+    context::sender = cs~load_msg_addr();
+    context::op = in_msg_body~load_uint(32);
+    context::query_id = in_msg_body~load_uint(64);
+
+    load_data();
+
+    if (context::bounced?) {
+
+    }
+
+    elseif (context::op == op::check_claim) {
+        throw_if(error::already_claimed, data::claimed);
+        throw_unless(error::wrong_sender, equal_slices(context::sender, data::task));
+
+        slice referrer = in_msg_body~load_msg_addr();
+        int reward = in_msg_body~load_coins();
+
+        data::claimed = true;
+
+        if (referrer.preload_uint(2) != 0) {
+            cell init = compose_init(my_code(), begin_cell()
+                .store_int(false, 1)
+                .store_slice(referrer)
+                .store_slice(data::task)
+                .store_uint(0, 32)
+            .end_cell());
+
+            send_msg_with_body_and_init(
+                false,
+                calculate_address(init),
+                const::ton_for_fees,
+                compose_body(op::add_referral, context::query_id, begin_cell()),
+                init,
+                1
+            );
+        }
+
+        raw_reserve(const::ton_for_storage, 0);
+        send_msg_with_body(
+            false,
+            data::task,
+            0,
+            compose_body(op::confirm_claim, context::query_id, begin_cell()
+                .store_slice(data::user)
+                .store_coins(reward)
+            ),
+            128
+        );
+    }
+
+    else {
+        throw(0xffff);
+    }
+
+    save_data();
+}
