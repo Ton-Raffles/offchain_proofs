@@ -1,4 +1,4 @@
-_ public_key:uint256 jetton_wallet:MsgAddressInt admin:MsgAddress helper_code:^Cell = TaskStorage;
+_ public_key:uint256 jetton_wallet:MsgAddress admin:MsgAddress helper_code:^Cell = TaskStorage;
 
 _ claimed:Bool user:MsgAddressInt task:MsgAddressInt referrals:uint32 = Helper1Storage;
 

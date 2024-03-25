@@ -97,3 +97,8 @@ global slice context::sender;
 
     save_data();
 }
+
+(int, slice, slice, int) get_contract_data() method_id {
+    load_data();
+    return (data::claimed, data::user, data::task, data::referrals);
+}

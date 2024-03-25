@@ -142,3 +142,8 @@ global slice context::sender;
 
     save_data();
 }
+
+(int, slice, slice, cell) get_contract_data() method_id {
+    load_data();
+    return (data::public_key, data::jetton_wallet, data::admin, data::helper_code);
+}
