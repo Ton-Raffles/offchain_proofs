@@ -16,4 +16,4 @@ confirm_claim#5170785a query_id:uint64 user:MsgAddressInt reward:Coins = Interna
 
 send_service_message#000a3c66 query_id:uint64 message:^Cell mode:uint8 = InternalMsgBody;
 
-add_referral#3f5c2970 query_id:uint64 = InternalMsgBody;
+add_referral#6cdd7d7b query_id:uint64 user:MsgAddressInt = InternalMsgBody;

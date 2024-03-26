@@ -55,8 +55,6 @@ global slice context::sender;
         throw_unless(error::wrong_sender, equal_slices(context::sender, data::admin));
         
         data::jetton_wallet = in_msg_body~load_msg_addr();
-        
-        in_msg_body.end_parse();
     }
 
     elseif (context::op == op::claim) {
@@ -146,4 +144,17 @@ global slice context::sender;
 (int, slice, slice, cell) get_contract_data() method_id {
     load_data();
     return (data::public_key, data::jetton_wallet, data::admin, data::helper_code);
+}
+
+(cell, slice) get_stateinit_and_address_of_helper(slice user) method_id {
+    load_data();
+
+    cell init = compose_init(data::helper_code, begin_cell()
+        .store_int(false, 1)
+        .store_slice(user)
+        .store_slice(my_address())
+        .store_uint(0, 32)
+    .end_cell());
+    
+    return (init, calculate_address(init));
 }

@@ -1,4 +1,15 @@
-import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, Sender, SendMode } from '@ton/core';
+import {
+    Address,
+    beginCell,
+    Cell,
+    Contract,
+    contractAddress,
+    ContractProvider,
+    ExternalAddress,
+    Sender,
+    SendMode,
+} from '@ton/core';
+import { Maybe } from '@ton/core/dist/utils/maybe';
 
 export type TaskConfig = {
     publicKey: Buffer;
@@ -12,6 +23,22 @@ export function taskConfigToCell(config: TaskConfig): Cell {
         .storeUint(0, 2)
         .storeAddress(config.admin)
         .storeRef(config.helperCode)
+        .endCell();
+}
+
+export function composeDataToSign(
+    task: Address,
+    user: Address,
+    referrer: Maybe<Address | ExternalAddress>,
+    reward: bigint,
+    validUntil: number,
+): Cell {
+    return beginCell()
+        .storeAddress(task)
+        .storeAddress(user)
+        .storeAddress(referrer)
+        .storeCoins(reward)
+        .storeUint(validUntil, 64)
         .endCell();
 }
 

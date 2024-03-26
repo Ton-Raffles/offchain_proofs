@@ -72,7 +72,9 @@ global slice context::sender;
                 false,
                 calculate_address(init),
                 const::ton_for_fees,
-                compose_body(op::add_referral, context::query_id, begin_cell()),
+                compose_body(op::add_referral, context::query_id, begin_cell()
+                    .store_slice(data::user)
+                ),
                 init,
                 1
             );
@@ -89,6 +91,21 @@ global slice context::sender;
             ),
             128
         );
+    }
+
+    elseif (context::op == op::add_referral) {
+        slice user = in_msg_body~load_msg_addr();
+
+        cell init = compose_init(my_code(), begin_cell()
+            .store_int(false, 1)
+            .store_slice(user)
+            .store_slice(data::task)
+            .store_uint(0, 32)
+        .end_cell());
+
+        throw_unless(error::wrong_sender, equal_slices(context::sender, calculate_address(init)));
+
+        data::referrals += 1;
     }
 
     else {
