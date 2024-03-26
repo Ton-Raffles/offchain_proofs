@@ -6,6 +6,7 @@ import { compile } from '@ton/blueprint';
 import { JettonMinter } from '../wrappers/JettonMinter';
 import { JettonWallet } from '../wrappers/JettonWallet';
 import { KeyPair, getSecureRandomBytes, keyPairFromSeed, sign } from '@ton/crypto';
+import { Helper } from '../wrappers/Helper';
 
 describe('Task 1', () => {
     let codeTask: Cell;
@@ -137,6 +138,9 @@ describe('Task 1', () => {
         expect(result.transactions).toHaveLength(8);
 
         expect(await jettonWallets[1].getJettonBalance()).toBe(toNano('10'));
+
+        const helper = blockchain.openContract(Helper.createFromAddress(await task.getHelperAddress(users[2].address)));
+        expect((await helper.getContractData()).referrals).toEqual(1);
     });
 
     it('should not claim reward if signature is incorrect', async () => {
