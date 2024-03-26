@@ -1,13 +1,13 @@
 import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, Sender, SendMode } from '@ton/core';
 
-export class Helper1 implements Contract {
+export class Helper implements Contract {
     constructor(
         readonly address: Address,
         readonly init?: { code: Cell; data: Cell },
     ) {}
 
     static createFromAddress(address: Address) {
-        return new Helper1(address);
+        return new Helper(address);
     }
 
     async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {

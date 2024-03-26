@@ -9,13 +9,13 @@ import { KeyPair, getSecureRandomBytes, keyPairFromSeed, sign } from '@ton/crypt
 
 describe('Task 1', () => {
     let codeTask: Cell;
-    let codeHelper1: Cell;
+    let codeHelper: Cell;
     let codeJettonMinter: Cell;
     let codeJettonWallet: Cell;
 
     beforeAll(async () => {
         codeTask = await compile('Task');
-        codeHelper1 = await compile('Helper1');
+        codeHelper = await compile('Helper');
         codeJettonMinter = await compile('JettonMinter');
         codeJettonWallet = await compile('JettonWallet');
     });
@@ -61,7 +61,7 @@ describe('Task 1', () => {
                 {
                     publicKey: keyPair.publicKey,
                     admin: users[0].address,
-                    helperCode: codeHelper1,
+                    helperCode: codeHelper,
                 },
                 codeTask,
             ),
