@@ -6,6 +6,7 @@
 global int data::public_key;
 global slice data::jetton_wallet;
 global slice data::admin;
+global int data::reward;
 global cell data::helper_code;
 
 ;; context globals
@@ -19,6 +20,7 @@ global slice context::sender;
     data::public_key = ds~load_uint(256);
     data::jetton_wallet = ds~load_msg_addr();
     data::admin = ds~load_msg_addr();
+    data::reward = ds~load_coins();
     data::helper_code = ds~load_ref();
 }
 
@@ -27,6 +29,7 @@ global slice context::sender;
         .store_uint(data::public_key, 256)
         .store_slice(data::jetton_wallet)
         .store_slice(data::admin)
+        .store_coins(data::reward)
         .store_ref(data::helper_code)
     .end_cell());
 }
@@ -69,7 +72,6 @@ global slice context::sender;
         slice task = s~load_msg_addr();
         slice user = s~load_msg_addr();
         slice referrer = s~load_msg_addr();
-        int reward = s~load_coins();
         int valid_until = s~load_uint(64);
 
         throw_unless(error::wrong_sender, equal_slices(context::sender, user));
@@ -89,7 +91,6 @@ global slice context::sender;
             0,
             compose_body(op::check_claim, context::query_id, begin_cell()
                 .store_slice(referrer)
-                .store_coins(reward)
             ),
             init,
             64
@@ -98,7 +99,6 @@ global slice context::sender;
 
     elseif (context::op == op::confirm_claim) {
         slice user = in_msg_body~load_msg_addr();
-        int reward = in_msg_body~load_coins();
 
         cell init = compose_init(data::helper_code, begin_cell()
             .store_int(false, 1)
@@ -114,7 +114,7 @@ global slice context::sender;
             data::jetton_wallet,
             0,
             compose_body(op::jetton::transfer, context::query_id, begin_cell()
-                .store_coins(reward)
+                .store_coins(data::reward)
                 .store_slice(user)
                 .store_slice(user)
                 .store_uint(0, 1)
@@ -141,9 +141,9 @@ global slice context::sender;
     save_data();
 }
 
-(int, slice, slice, cell) get_contract_data() method_id {
+(int, slice, slice, int, cell) get_contract_data() method_id {
     load_data();
-    return (data::public_key, data::jetton_wallet, data::admin, data::helper_code);
+    return (data::public_key, data::jetton_wallet, data::admin, data::reward, data::helper_code);
 }
 
 (cell, slice) get_stateinit_and_address_of_helper(slice user) method_id {

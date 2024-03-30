@@ -56,7 +56,6 @@ global slice context::sender;
         throw_unless(error::wrong_sender, equal_slices(context::sender, data::task));
 
         slice referrer = in_msg_body~load_msg_addr();
-        int reward = in_msg_body~load_coins();
 
         data::claimed = true;
 
@@ -87,7 +86,6 @@ global slice context::sender;
             0,
             compose_body(op::confirm_claim, context::query_id, begin_cell()
                 .store_slice(data::user)
-                .store_coins(reward)
             ),
             128
         );

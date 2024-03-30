@@ -14,6 +14,7 @@ import { Maybe } from '@ton/core/dist/utils/maybe';
 export type TaskConfig = {
     publicKey: Buffer;
     admin: Address;
+    reward: bigint;
     helperCode: Cell;
 };
 
@@ -22,6 +23,7 @@ export function taskConfigToCell(config: TaskConfig): Cell {
         .storeBuffer(config.publicKey)
         .storeUint(0, 2)
         .storeAddress(config.admin)
+        .storeCoins(config.reward)
         .storeRef(config.helperCode)
         .endCell();
 }
@@ -30,14 +32,12 @@ export function composeDataToSign(
     task: Address,
     user: Address,
     referrer: Maybe<Address | ExternalAddress>,
-    reward: bigint,
     validUntil: number,
 ): Cell {
     return beginCell()
         .storeAddress(task)
         .storeAddress(user)
         .storeAddress(referrer)
-        .storeCoins(reward)
         .storeUint(validUntil, 64)
         .endCell();
 }
@@ -138,6 +138,7 @@ export class Task implements Contract {
             publicKey: Buffer.from('0x' + result.readBigNumber().toString(16)),
             jettonWallet: result.readAddress(),
             task: result.readAddress(),
+            reward: result.readBigNumber(),
             helperCode: result.readCell(),
         };
     }

@@ -62,6 +62,7 @@ describe('Task 1', () => {
                 {
                     publicKey: keyPair.publicKey,
                     admin: users[0].address,
+                    reward: toNano('10'),
                     helperCode: codeHelper,
                 },
                 codeTask,
@@ -91,7 +92,6 @@ describe('Task 1', () => {
             task.address,
             users[1].address,
             null,
-            toNano('10'),
             blockchain.now! + 1000,
         );
 
@@ -118,7 +118,6 @@ describe('Task 1', () => {
             task.address,
             users[1].address,
             users[2].address,
-            toNano('10'),
             blockchain.now! + 1000,
         );
 
@@ -148,7 +147,6 @@ describe('Task 1', () => {
             task.address,
             users[1].address,
             null,
-            toNano('10'),
             blockchain.now! + 1000,
         );
 
@@ -174,7 +172,6 @@ describe('Task 1', () => {
             task.address,
             users[1].address,
             null,
-            toNano('10'),
             blockchain.now! - 1000,
         );
 
@@ -202,7 +199,6 @@ describe('Task 1', () => {
             task.address,
             users[2].address,
             null,
-            toNano('10'),
             blockchain.now! + 1000,
         );
 
@@ -230,7 +226,6 @@ describe('Task 1', () => {
             users[2].address,
             users[1].address,
             null,
-            toNano('10'),
             blockchain.now! + 1000,
         );
 
@@ -258,7 +253,6 @@ describe('Task 1', () => {
             task.address,
             users[1].address,
             null,
-            toNano('10'),
             blockchain.now! + 1000,
         );
 
@@ -296,7 +290,6 @@ describe('Task 1', () => {
             task.address,
             users[1].address,
             null,
-            toNano('10'),
             blockchain.now! + 1000,
         );
 
