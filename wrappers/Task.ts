@@ -46,7 +46,7 @@ export class Task implements Contract {
     constructor(
         readonly address: Address,
         readonly init?: { code: Cell; data: Cell },
-    ) {}
+    ) { }
 
     static createFromAddress(address: Address) {
         return new Task(address);
@@ -120,6 +120,22 @@ export class Task implements Contract {
                 .storeUint(opts.mode, 8)
                 .endCell(),
         });
+    }
+
+    async sendWithdrawJettons(
+        provider: ContractProvider,
+        via: Sender,
+        value: bigint,
+        opts: {
+            queryId?: bigint;
+            amount: bigint;
+        }
+    ) {
+        await provider.internal(via, {
+            value,
+            sendMode: SendMode.PAY_GAS_SEPARATELY,
+            body: beginCell().storeUint(0x190592b2, 32).storeUint(opts.queryId ?? 0, 64).storeCoins(opts.amount).endCell()
+        })
     }
 
     async getHelperAddress(provider: ContractProvider, user: Address) {

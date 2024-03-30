@@ -134,6 +134,27 @@ global slice context::sender;
         send_raw_message(message, mode);
     }
 
+    elseif (context::op == op::withdraw_jettons) {
+        throw_unless(error::wrong_sender, equal_slices(context::sender, data::admin));
+
+        int amount = in_msg_body~load_coins();
+
+        send_msg_with_body(
+            true,
+            data::jetton_wallet,
+            0,
+            compose_body(op::jetton::transfer, context::query_id, begin_cell()
+                .store_coins(amount)
+                .store_slice(data::admin)
+                .store_slice(data::admin)
+                .store_uint(0, 1)
+                .store_coins(1)
+                .store_uint(0, 1)
+            ),
+            64
+        );
+    }
+
     else {
         throw(0xffff);
     }

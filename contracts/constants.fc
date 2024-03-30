@@ -3,6 +3,7 @@ const int op::claim = 0x456a9261;
 const int op::check_claim = 0x518872dc;
 const int op::confirm_claim = 0x176759c6;
 const int op::send_service_message = 0x000a3c66;
+const int op::withdraw_jettons = 0x190592b2;
 const int op::add_referral = 0x6cdd7d7b;
 
 const int op::jetton::transfer = 0x0f8a7ea5;

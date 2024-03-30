@@ -16,4 +16,6 @@ confirm_claim#176759c6 query_id:uint64 user:MsgAddressInt = InternalMsgBody;
 
 send_service_message#000a3c66 query_id:uint64 message:^Cell mode:uint8 = InternalMsgBody;
 
+withdraw_jettons#190592b2 query_id:uint64 amount:Coins = InternalMsgBody;
+
 add_referral#6cdd7d7b query_id:uint64 user:MsgAddressInt = InternalMsgBody;

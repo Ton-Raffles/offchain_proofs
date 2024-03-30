@@ -311,4 +311,17 @@ describe('Task 1', () => {
 
         expect(await jettonWallets[1].getJettonBalance()).toBe(0n);
     });
+
+    it('should withdraw jettons by admin', async () => {
+        const result = await task.sendWithdrawJettons(users[0].getSender(), toNano('0.1'), { amount: toNano('1.23') });
+
+        expect(result.transactions).toHaveTransaction({
+            from: users[0].address,
+            to: task.address,
+            success: true,
+        });
+
+        expect(result.transactions).toHaveLength(6);
+        expect(await jettonWallets[0].getJettonBalance()).toBe(toNano('1.23'));
+    })
 });
