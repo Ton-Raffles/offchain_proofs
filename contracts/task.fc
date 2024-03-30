@@ -55,7 +55,7 @@ global slice context::sender;
     }
 
     elseif (context::op == op::deploy) {
-        throw_unless(error::wrong_sender, equal_slices(context::sender, data::admin));
+        throw_unless(error::already_deployed, data::jetton_wallet.preload_uint(2) == 0);
         
         data::jetton_wallet = in_msg_body~load_msg_addr();
     }
