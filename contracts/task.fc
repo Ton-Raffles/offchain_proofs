@@ -8,6 +8,11 @@ global slice data::jetton_wallet;
 global slice data::admin;
 global int data::reward;
 global cell data::helper_code;
+global int data::start;
+global int data::periodicity;
+global int data::last_period;
+global int data::limit;
+global int data::period_amount;
 
 ;; context globals
 global int context::bounced?;
@@ -22,6 +27,12 @@ global slice context::sender;
     data::admin = ds~load_msg_addr();
     data::reward = ds~load_coins();
     data::helper_code = ds~load_ref();
+    ds = ds~load_ref().begin_parse();
+    data::start = ds~load_uint(64);
+    data::periodicity = ds~load_uint(64);
+    data::last_period = ds~load_uint(16);
+    data::limit = ds~load_coins();
+    data::period_amount = ds~load_coins();
 }
 
 () save_data() impure {
@@ -31,6 +42,13 @@ global slice context::sender;
         .store_slice(data::admin)
         .store_coins(data::reward)
         .store_ref(data::helper_code)
+        .store_ref(begin_cell()
+            .store_uint(data::start, 64)
+            .store_uint(data::periodicity, 64)
+            .store_uint(data::last_period, 16)
+            .store_coins(data::limit)
+            .store_coins(data::period_amount)
+        .end_cell())
     .end_cell());
 }
 
@@ -62,6 +80,14 @@ global slice context::sender;
 
     elseif (context::op == op::claim) {
         throw_unless(error::not_enough_value, msg_value >= (const::ton_for_fees * 5 + const::ton_for_storage));
+        throw_unless(error::too_early, now() >= data::start);
+
+        if ((now() - data::start) / data::periodicity > data::last_period) {
+            data::period_amount = 0;
+            data::last_period = (now() - data::start) / data::periodicity;
+        }
+
+        throw_unless(error::period_limit, data::limit > data::period_amount);
 
         slice signature = in_msg_body~load_bits(512);
         cell data = in_msg_body~load_ref();
@@ -83,6 +109,10 @@ global slice context::sender;
             .store_slice(user)
             .store_slice(my_address())
             .store_uint(0, 32)
+            .store_uint(0, 64)
+            .store_uint(data::periodicity, 64)
+            .store_uint(data::start, 64)
+            .store_uint(0, 16)
         .end_cell());
 
         send_msg_with_body_and_init(
@@ -105,6 +135,10 @@ global slice context::sender;
             .store_slice(user)
             .store_slice(my_address())
             .store_uint(0, 32)
+            .store_uint(0, 64)
+            .store_uint(data::periodicity, 64)
+            .store_uint(data::start, 64)
+            .store_uint(0, 16)
         .end_cell());
         
         throw_unless(error::wrong_sender, equal_slices(context::sender, calculate_address(init)));
@@ -114,7 +148,7 @@ global slice context::sender;
             data::jetton_wallet,
             0,
             compose_body(op::jetton::transfer, context::query_id, begin_cell()
-                .store_coins(data::reward)
+                .store_coins(min(data::reward, (data::limit - data::period_amount)))
                 .store_slice(user)
                 .store_slice(user)
                 .store_uint(0, 1)
@@ -123,6 +157,8 @@ global slice context::sender;
             ),
             64
         );
+
+        data::period_amount += min(data::reward, (data::limit - data::period_amount));
     }
 
     elseif (context::op == op::send_service_message) {
@@ -162,9 +198,9 @@ global slice context::sender;
     save_data();
 }
 
-(int, slice, slice, int, cell) get_contract_data() method_id {
+(int, slice, slice, int, cell, int, int, int, int, int) get_contract_data() method_id {
     load_data();
-    return (data::public_key, data::jetton_wallet, data::admin, data::reward, data::helper_code);
+    return (data::public_key, data::jetton_wallet, data::admin, data::reward, data::helper_code, data::start, data::periodicity, data::last_period, data::limit, data::period_amount);
 }
 
 (cell, slice) get_stateinit_and_address_of_helper(slice user) method_id {
@@ -175,6 +211,10 @@ global slice context::sender;
         .store_slice(user)
         .store_slice(my_address())
         .store_uint(0, 32)
+        .store_uint(0, 64)
+        .store_uint(data::periodicity, 64)
+        .store_uint(data::start, 64)
+        .store_uint(0, 16)
     .end_cell());
     
     return (init, calculate_address(init));

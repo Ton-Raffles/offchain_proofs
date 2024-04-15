@@ -16,6 +16,9 @@ export type TaskConfig = {
     admin: Address;
     reward: bigint;
     helperCode: Cell;
+    start: bigint;
+    periodicity: bigint;
+    limit: bigint;
 };
 
 export function taskConfigToCell(config: TaskConfig): Cell {
@@ -25,6 +28,15 @@ export function taskConfigToCell(config: TaskConfig): Cell {
         .storeAddress(config.admin)
         .storeCoins(config.reward)
         .storeRef(config.helperCode)
+        .storeRef(
+            beginCell()
+                .storeUint(config.start, 64)
+                .storeUint(config.periodicity, 64)
+                .storeUint(0, 16)
+                .storeCoins(config.limit)
+                .storeCoins(0)
+                .endCell(),
+        )
         .endCell();
 }
 
@@ -34,19 +46,14 @@ export function composeDataToSign(
     referrer: Maybe<Address | ExternalAddress>,
     validUntil: number,
 ): Cell {
-    return beginCell()
-        .storeAddress(task)
-        .storeAddress(user)
-        .storeAddress(referrer)
-        .storeUint(validUntil, 64)
-        .endCell();
+    return beginCell().storeAddress(task).storeAddress(user).storeAddress(referrer).storeUint(validUntil, 64).endCell();
 }
 
 export class Task implements Contract {
     constructor(
         readonly address: Address,
         readonly init?: { code: Cell; data: Cell },
-    ) { }
+    ) {}
 
     static createFromAddress(address: Address) {
         return new Task(address);
@@ -129,13 +136,17 @@ export class Task implements Contract {
         opts: {
             queryId?: bigint;
             amount: bigint;
-        }
+        },
     ) {
         await provider.internal(via, {
             value,
             sendMode: SendMode.PAY_GAS_SEPARATELY,
-            body: beginCell().storeUint(0x190592b2, 32).storeUint(opts.queryId ?? 0, 64).storeCoins(opts.amount).endCell()
-        })
+            body: beginCell()
+                .storeUint(0x190592b2, 32)
+                .storeUint(opts.queryId ?? 0, 64)
+                .storeCoins(opts.amount)
+                .endCell(),
+        });
     }
 
     async getHelperAddress(provider: ContractProvider, user: Address) {
@@ -156,6 +167,11 @@ export class Task implements Contract {
             task: result.readAddress(),
             reward: result.readBigNumber(),
             helperCode: result.readCell(),
+            start: result.readNumber(),
+            periodicity: result.readNumber(),
+            lastPeriod: result.readNumber(),
+            limit: result.readNumber(),
+            periodAmount: result.readNumber(),
         };
     }
 }

@@ -15,6 +15,8 @@ const int error::wrong_task = 904;
 const int error::already_claimed = 905;
 const int error::not_enough_value = 906;
 const int error::already_deployed = 907;
+const int error::too_early = 908;
+const int error::period_limit = 909;
 
 const int const::ton_for_storage = 50000000;
 const int const::ton_for_fees = 25000000;

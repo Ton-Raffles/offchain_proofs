@@ -7,6 +7,10 @@ global int data::claimed;
 global slice data::user;
 global slice data::task;
 global int data::referrals;
+global int data::last_activity;
+global int data::periodicity;
+global int data::start;
+global int data::last_period;
 
 ;; context globals
 global int context::bounced?;
@@ -20,6 +24,11 @@ global slice context::sender;
     data::user = ds~load_msg_addr();
     data::task = ds~load_msg_addr();
     data::referrals = ds~load_uint(32);
+    data::last_activity = ds~load_uint(64);
+    data::periodicity = ds~load_uint(64);
+    data::start = ds~load_uint(64);
+    data::last_period = ds~load_uint(16);
+
 }
 
 () save_data() impure {
@@ -28,6 +37,10 @@ global slice context::sender;
         .store_slice(data::user)
         .store_slice(data::task)
         .store_uint(data::referrals, 32)
+        .store_uint(data::last_activity, 64)
+        .store_uint(data::periodicity, 64)
+        .store_uint(data::start, 64)
+        .store_uint(data::last_period, 16)
     .end_cell());
 }
 
@@ -52,12 +65,18 @@ global slice context::sender;
     }
 
     elseif (context::op == op::check_claim) {
+        if ((now() - data::start) / data::periodicity > data::last_period) {
+            data::claimed = false;
+            data::last_period = (now() - data::start) / data::periodicity;
+        }
+
         throw_if(error::already_claimed, data::claimed);
         throw_unless(error::wrong_sender, equal_slices(context::sender, data::task));
 
         slice referrer = in_msg_body~load_msg_addr();
 
         data::claimed = true;
+        data::last_activity = now();
 
         if (referrer.preload_uint(2) != 0) {
             cell init = compose_init(my_code(), begin_cell()
@@ -65,6 +84,10 @@ global slice context::sender;
                 .store_slice(referrer)
                 .store_slice(data::task)
                 .store_uint(0, 32)
+                .store_uint(0, 64)
+                .store_uint(data::periodicity, 64)
+                .store_uint(data::start, 64)
+                .store_uint(0, 16)
             .end_cell());
 
             send_msg_with_body_and_init(
@@ -99,6 +122,10 @@ global slice context::sender;
             .store_slice(user)
             .store_slice(data::task)
             .store_uint(0, 32)
+            .store_uint(0, 64)
+            .store_uint(data::periodicity, 64)
+            .store_uint(data::start, 64)
+            .store_uint(0, 16)
         .end_cell());
 
         throw_unless(error::wrong_sender, equal_slices(context::sender, calculate_address(init)));
@@ -113,7 +140,7 @@ global slice context::sender;
     save_data();
 }
 
-(int, slice, slice, int) get_contract_data() method_id {
+(int, slice, slice, int, int, int, int, int) get_contract_data() method_id {
     load_data();
-    return (data::claimed, data::user, data::task, data::referrals);
+    return (data::claimed, data::user, data::task, data::referrals, data::last_activity, data::periodicity, data::start, data::last_period);
 }

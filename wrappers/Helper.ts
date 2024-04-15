@@ -25,6 +25,10 @@ export class Helper implements Contract {
             task: result.readAddress(),
             user: result.readAddress(),
             referrals: result.readNumber(),
+            lastActivity: result.readNumber(),
+            periodicity: result.readNumber(),
+            start: result.readNumber(),
+            lastPeriod: result.readNumber(),
         };
     }
 }
