@@ -143,12 +143,14 @@ global slice context::sender;
         
         throw_unless(error::wrong_sender, equal_slices(context::sender, calculate_address(init)));
 
+        int reward = min(data::reward, (data::limit - data::period_amount));
+
         send_msg_with_body(
             false,
             data::jetton_wallet,
             0,
             compose_body(op::jetton::transfer, context::query_id, begin_cell()
-                .store_coins(min(data::reward, (data::limit - data::period_amount)))
+                .store_coins(reward)
                 .store_slice(user)
                 .store_slice(user)
                 .store_uint(0, 1)
@@ -158,7 +160,7 @@ global slice context::sender;
             64
         );
 
-        data::period_amount += min(data::reward, (data::limit - data::period_amount));
+        data::period_amount += reward;
     }
 
     elseif (context::op == op::send_service_message) {

@@ -1,5 +1,5 @@
-_ public_key:uint256 jetton_wallet:MsgAddress admin:MsgAddress reward:Coins helper_code:^Cell 
-[ start:uint64 periodicity:uint64 last_period:uint16 limit:Coins period_amount:Coins ]^Cell = TaskStorage;
+_ public_key:uint256 jetton_wallet:MsgAddress admin:MsgAddress reward:Coins helper_code:^Cell ^[
+  start:uint64 periodicity:uint64 last_period:uint16 limit:Coins period_amount:Coins ] = TaskStorage;
 
 _ claimed:Bool user:MsgAddressInt task:MsgAddressInt referrals:uint32 last_activity:uint64 periodicity:uint64 start:uint64 last_period:uint16 = HelperStorage;
 
