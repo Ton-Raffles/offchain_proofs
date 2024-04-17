@@ -390,6 +390,115 @@ describe('Task 1', () => {
         expect(await jettonWallets[1].getJettonBalance()).toBe(toNano('20'));
     });
 
+    it('should claim reward in period 2 users', async () => {
+        task = blockchain.openContract(
+            Task.createFromConfig(
+                {
+                    publicKey: keyPair.publicKey,
+                    admin: users[0].address,
+                    reward: toNano('10'),
+                    helperCode: codeHelper,
+                    start: 10001n,
+                    periodicity: 10n,
+                    limit: toNano('15'),
+                },
+                codeTask,
+            ),
+        );
+
+        const deployResult = await task.sendDeploy(users[0].getSender(), toNano('0.05'), {
+            jettonWallet: await jettonMinter.getWalletAddressOf(task.address),
+        });
+
+        expect(deployResult.transactions).toHaveTransaction({
+            from: users[0].address,
+            to: task.address,
+            deploy: true,
+            success: true,
+        });
+
+        await jettonMinter.sendMint(users[0].getSender(), toNano('0.05'), 0n, task.address, toNano('1000'));
+
+        blockchain.now = 10001;
+        let dataToSign = composeDataToSign(task.address, users[1].address, null, blockchain.now! + 1000);
+
+        let signature = sign(dataToSign.hash(), keyPair.secretKey);
+
+        let result = await task.sendClaim(users[1].getSender(), toNano('0.175'), {
+            data: dataToSign,
+            signature,
+        });
+
+        expect(result.transactions).toHaveTransaction({
+            from: users[1].address,
+            to: task.address,
+            success: true,
+        });
+
+        expect(result.transactions).toHaveLength(8);
+
+        expect(await jettonWallets[1].getJettonBalance()).toBe(toNano('10'));
+
+        dataToSign = composeDataToSign(task.address, users[2].address, null, blockchain.now! + 1000);
+
+        signature = sign(dataToSign.hash(), keyPair.secretKey);
+
+        result = await task.sendClaim(users[2].getSender(), toNano('0.175'), {
+            data: dataToSign,
+            signature,
+        });
+
+        expect(result.transactions).toHaveTransaction({
+            from: users[2].address,
+            to: task.address,
+            success: true,
+        });
+
+        expect(result.transactions).toHaveLength(8);
+
+        expect(await jettonWallets[2].getJettonBalance()).toBe(toNano('5'));
+
+        dataToSign = composeDataToSign(task.address, users[1].address, null, blockchain.now! + 1000);
+
+        signature = sign(dataToSign.hash(), keyPair.secretKey);
+
+        result = await task.sendClaim(users[1].getSender(), toNano('0.175'), {
+            data: dataToSign,
+            signature,
+        });
+
+        expect(result.transactions).toHaveTransaction({
+            from: users[1].address,
+            to: task.address,
+            exitCode: 909,
+        });
+
+        expect(result.transactions).toHaveLength(3);
+
+        expect(await jettonWallets[1].getJettonBalance()).toBe(toNano('10'));
+        expect(await jettonWallets[2].getJettonBalance()).toBe(toNano('5'));
+
+        blockchain.now = 10011;
+        dataToSign = composeDataToSign(task.address, users[1].address, null, blockchain.now! + 1000);
+
+        signature = sign(dataToSign.hash(), keyPair.secretKey);
+
+        result = await task.sendClaim(users[1].getSender(), toNano('0.175'), {
+            data: dataToSign,
+            signature,
+        });
+
+        expect(result.transactions).toHaveTransaction({
+            from: users[1].address,
+            to: task.address,
+            success: true,
+        });
+
+        expect(result.transactions).toHaveLength(8);
+
+        expect(await jettonWallets[1].getJettonBalance()).toBe(toNano('20'));
+    });
+
     it('should withdraw jettons by admin', async () => {
         blockchain.now = 10001;
         const result = await task.sendWithdrawJettons(users[0].getSender(), toNano('0.1'), { amount: toNano('1.23') });
