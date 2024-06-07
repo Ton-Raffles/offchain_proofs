@@ -1,4 +1,4 @@
-# offchain_proofs
+# offchain_proofs v1
 
 ## Project structure
 
