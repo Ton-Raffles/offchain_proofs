@@ -24,3 +24,8 @@
 ### Add a new contract
 
 `npx blueprint create ContractName` or `yarn blueprint create ContractName`
+
+
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
